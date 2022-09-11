@@ -1,13 +1,20 @@
 <template>
     <h1>Posts</h1>
-  
 
-    <div>
-        
-    </div>
+    <form @submit.prevent="sendForm">
+      <div class="mb-3">
+        <label for="title" class="form-label">عنوان پست</label>
+        <input type="text" class="form-control" id="title" v-model="postForm.title" />
+      </div>
+      <div class="mb-3">
+        <label for="body" class="form-label">متن پست</label>
+        <textarea class="form-control" id="body" rows="3" v-model="postForm.body"></textarea>
+      </div>
+      <button class="btn btn-info mb-4" type="submit">ارسال فرم</button>
+    </form>
 
 
-    <button class="btn btn-success mb-4" @click="getPosts">get posts from jsonplaceholder</button>
+    <!-- <button class="btn btn-success mb-4" @click="getPosts">get posts from jsonplaceholder</button> -->
     <p class="alert alert-danger" v-if="errorText">{{ errorText }}</p>
         <div class="row">
             <div v-for="post in posts" :key="post.id" class="card" style="width: 18rem;">
@@ -18,7 +25,6 @@
                 </div>
             </div>
         </div>
-
 
 
         <!-- Modal -->
@@ -52,13 +58,14 @@
   
     setup() {
       const posts = reactive([]);
-      const post = reactive({ title: '', body: '' })
+      const post = reactive({ title: '', body: '' });
+      const postForm = reactive({ title: '', body: '', userId: 2 });
       const user = reactive({});
       const exampleModal = ref(null);
       const modal = ref(null);
       const errorText = ref('');
 
-      function handleError(res) {
+      const handleError = (res) => {
         if (! res.ok) {
           throw new Error('اررور داشتیم')
         }
@@ -86,9 +93,35 @@
                 Object.assign(user, data)
                 modal.value.show();
               })
+            .catch(error => errorText.value = error.message)
           })
         .catch(error => errorText.value = error.message)
       }
+
+      const sendForm = () => {
+        fetch('https://jsonplaceholder.typicode.com/posts', {
+          method: 'post',
+          headers: {
+            'Content-type': 'application/json; charset: utf-8;'
+          },
+          body: JSON.stringify(postForm)
+        })
+        .then(handleError)
+        .then(res => res.json())
+        .then(data => {
+          posts.push({
+            id: data.id,
+
+            ...postForm
+          })
+
+          postForm.title = ''
+          postForm.body = ''
+        })
+        .catch(error => errorText.value = error.message)
+      }
+
+      getPosts();
 
       onMounted(() => {
         modal.value = new Modal(exampleModal.value)
@@ -99,9 +132,10 @@
         post,
         user,
         errorText,
-        getPosts,
         exampleModal,
-        showPostModal
+        showPostModal,
+        postForm,
+        sendForm,
       };
     },
   

@@ -8,6 +8,7 @@
 
 
     <button class="btn btn-success mb-4" @click="getPosts">get posts from jsonplaceholder</button>
+    <p class="alert alert-danger" v-if="errorText">{{ errorText }}</p>
         <div class="row">
             <div v-for="post in posts" :key="post.id" class="card" style="width: 18rem;">
                 <div class="card-body">
@@ -55,26 +56,38 @@
       const user = reactive({});
       const exampleModal = ref(null);
       const modal = ref(null);
+      const errorText = ref('');
+
+      function handleError(res) {
+        if (! res.ok) {
+          throw new Error('اررور داشتیم')
+        }
+        return res;
+      }
   
       const getPosts = () => {
-        
         fetch('https://jsonplaceholder.typicode.com/posts')
+          .then(handleError)
           .then(res => res.json())
-          .then(data => posts.push(...data))
+          .then(data => Object.assign(posts, data))
+          .catch(error => errorText.value = error.message)
       }
 
       const showPostModal = (id) => {
         fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
+          .then(handleError)
           .then(res => res.json())
           .then(data => {
             Object.assign(post, data)
             fetch(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
+              .then(handleError)
               .then(res => res.json())
               .then(data => {
                 Object.assign(user, data)
                 modal.value.show();
               })
           })
+        .catch(error => errorText.value = error.message)
       }
 
       onMounted(() => {
@@ -85,6 +98,7 @@
         posts,
         post,
         user,
+        errorText,
         getPosts,
         exampleModal,
         showPostModal

@@ -1,17 +1,10 @@
 <template>
     <h1>Posts</h1>
 
-    <form @submit.prevent="isUpdating ? updatePostForm() : savePostForm()">
-      <div class="mb-3">
-        <label for="title" class="form-label">عنوان پست</label>
-        <input type="text" class="form-control" id="title" v-model="postForm.title" />
-      </div>
-      <div class="mb-3">
-        <label for="body" class="form-label">متن پست</label>
-        <textarea class="form-control" id="body" rows="3" v-model="postForm.body"></textarea>
-      </div>
-      <button class="btn btn-info mb-4" type="submit">ارسال فرم</button>
-    </form>
+    <PostForm 
+    @post-saved="savePostForm" 
+    @post-updated="updatePostForm"
+    :data="postForm" />
 
 
     <!-- <button class="btn btn-success mb-4" @click="getPosts">get posts from jsonplaceholder</button> -->
@@ -54,9 +47,14 @@
   <script>
   import { ref, reactive, onMounted } from "vue";
   import { Modal } from 'bootstrap'
+  import PostForm from './PostForm.vue'
   
   export default {
     name: "Posts",
+
+    components: {
+      PostForm
+    },
   
     setup() {
       const posts = reactive([]);
@@ -101,32 +99,11 @@
         .catch(error => errorText.value = error.message)
       }
 
-      const savePostForm = () => {
-        fetch('https://jsonplaceholder.typicode.com/posts', {
-          method: 'post',
-          headers: {
-            'Content-type': 'application/json; charset: utf-8;'
-          },
-          body: JSON.stringify(postForm)
-        })
-        .then(handleError)
-        .then(res => res.json())
-        .then(data => {
-          posts.push({
-            id: data.id,
-
-            ...postForm
-          })
-
-          postForm.title = ''
-          postForm.body = ''
-        })
-        .catch(error => errorText.value = error.message)
+      const savePostForm = (postForm) => {
+        posts.push(postForm);
       }
 
       const fetchUpdatePost = id => {
-          isUpdating.value = true;
-
           fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
             .then(handleError)
             .then(res => res.json())
@@ -139,29 +116,14 @@
             .catch(error => errorText.value = error.message)
         }
 
-        const updatePostForm = () => {
-            fetch(`https://jsonplaceholder.typicode.com/posts/${postForm.id}`, {
-              method: 'put',
-              headers: {
-                'Content-type': 'application/json; charset: utf-8;'
-              },
-              body: JSON.stringify(postForm)
-            })
-            .then(handleError)
-            .then(res => res.json())
-            .then(data => {
-              posts.map(post => {
-                if (post.id === postForm.id) {
-                  post.title = postForm.title
-                  post.body = postForm.body
-                }
-              })
-
-              postForm.title = ''
-              postForm.body = ''
-            })
-            .catch(error => errorText.value = error.message)
-          }
+        const updatePostForm = (updatedPost) => {
+          posts.map(post => {
+            if (post.id === updatedPost.id) {
+                post.title = updatedPost.title
+                post.body = updatedPost.body
+            }
+          })    
+        }
 
         const deletePost = (id, index) => {
           fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {

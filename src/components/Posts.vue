@@ -17,12 +17,13 @@
     <!-- <button class="btn btn-success mb-4" @click="getPosts">get posts from jsonplaceholder</button> -->
     <p class="alert alert-danger" v-if="errorText">{{ errorText }}</p>
         <div class="row">
-            <div v-for="post in posts" :key="post.id" class="card" style="width: 18rem;">
+            <div v-for="(post, index) in posts" :key="post.id" class="card" style="width: 18rem;">
                 <div class="card-body">
                     <h5 class="card-title">{{ post.title }}</h5>
                     <p class="card-text">{{ post.body }}</p>
-                    <a href="#" class="btn btn-primary" @click="showPostModal(post.id)">more</a>
-                    <button class="btn btn-primary" @click="fetchUpdatePost(post.id)">edit</button>
+                    <a href="#" class="btn btn-sm btn-info" @click="showPostModal(post.id)">more</a>
+                    <button class="btn btn-sm btn-primary mx-2" @click="fetchUpdatePost(post.id)">edit</button>
+                    <button @click="deletePost(post.id, index)" class="btn btn-sm btn-danger">Delete</button>
                 </div>
             </div>
         </div>
@@ -162,6 +163,19 @@
             .catch(error => errorText.value = error.message)
           }
 
+        const deletePost = (id, index) => {
+          fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+            method: 'delete'
+          })
+          .then(handleError)
+          .then(res => res.json())
+          .then(() => {
+            // const post = posts.find(post => post.id === id)
+            // const postIndex = posts.indexOf(post)
+            posts.splice(index, 1)
+          })
+        }
+
       getPosts();
 
       onMounted(() => {
@@ -179,7 +193,8 @@
         savePostForm,
         fetchUpdatePost,
         isUpdating,
-        updatePostForm
+        updatePostForm,
+        deletePost
       };
     },
   

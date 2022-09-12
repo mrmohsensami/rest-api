@@ -1,197 +1,123 @@
 <template>
-    <h1>Posts</h1>
-
-    <PostForm 
-    @post-saved="savePostForm" 
+  <h1>{{ msg }}</h1>
+  <PostForm
+    @post-saved="savePostForm"
     @post-updated="updatePostForm"
-    :data="postForm" />
+    @error="(message) => errorText = message"
+    :data="postForm"
+  />
 
+  <p class="alert alert-danger" v-if="errorText">{{ errorText }}</p>
+  <div class="row">
+    <PostCard
+      v-for="(post, index) in posts"
+      :key="post.id"
+      :post="post"
+      :index="index"
+      @error="(message) => errorText = message"
+      @show-modal="showPostModal"
+      @show-update="fetchUpdatePost"
+      @post-deleted="deletePost"
+    />
+  </div>
 
-    <!-- <button class="btn btn-success mb-4" @click="getPosts">get posts from jsonplaceholder</button> -->
-    <p class="alert alert-danger" v-if="errorText">{{ errorText }}</p>
-        <div class="row">
-            <div v-for="(post, index) in posts" :key="post.id" class="card" style="width: 18rem;">
-                <div class="card-body">
-                    <h5 class="card-title">{{ post.title }}</h5>
-                    <p class="card-text">{{ post.body }}</p>
-                    <a href="#" class="btn btn-sm btn-info" @click="showPostModal(post.id)">more</a>
-                    <button class="btn btn-sm btn-primary mx-2" @click="fetchUpdatePost(post.id)">edit</button>
-                    <button @click="deletePost(post.id, index)" class="btn btn-sm btn-danger">Delete</button>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Modal -->
-        <div class="modal fade" ref="exampleModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">{{ post.title }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                {{ post.body }}
-                <hr>
-                user: {{ user.name }}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
-            </div>
-            </div>
-        </div>
-        </div>
-  </template>
+  <!-- Modal -->
+  <PostModal ref="exampleModal" :post="post" :user="user" />
   
-  <script>
-  import { ref, reactive, onMounted } from "vue";
-  import { Modal } from 'bootstrap'
-  import PostForm from './PostForm.vue'
-  
-  export default {
-    name: "Posts",
+</template>
 
-    components: {
-      PostForm
-    },
-  
-    setup() {
-      const posts = reactive([]);
-      const post = reactive({ title: '', body: '' });
-      const postForm = reactive({ title: '', body: '', userId: 2 });
-      const isUpdating = ref(false);
-      const user = reactive({});
-      const exampleModal = ref(null);
-      const modal = ref(null);
-      const errorText = ref('');
+<script>
+import { ref, reactive, onMounted } from "vue";
+import { Modal } from 'bootstrap'
+import PostForm from './PostForm.vue'
+import PostCard from './PostCard.vue'
+import PostModal from './PostModal.vue'
 
-      const handleError = (res) => {
-        if (! res.ok) {
-          throw new Error('اررور داشتیم')
-        }
-        return res;
-      }
-  
-      const getPosts = () => {
-        fetch('https://jsonplaceholder.typicode.com/posts')
-          .then(handleError)
-          .then(res => res.json())
-          .then(data => Object.assign(posts, data))
-          .catch(error => errorText.value = error.message)
+export default {
+  name: "HelloWorld",
+  props: ["msg"],
+
+  components: {
+    PostForm,
+    PostCard,
+    PostModal
+  },
+
+  setup() {
+    const posts = reactive([]);
+    const post = reactive({ title: '', body: '' })
+    const postForm = reactive({ title: '', body: '', userId: 2 })
+    const user = reactive({})
+    const errorText = ref('');
+    const exampleModal = ref(null);
+    const modal = ref(null);
+
+    const handleError = (res) => {
+      if (! res.ok) {
+        throw new Error('اررور داشتیم')
       }
 
-      const showPostModal = (id) => {
-        fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
-          .then(handleError)
-          .then(res => res.json())
-          .then(data => {
-            Object.assign(post, data)
-            fetch(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
-              .then(handleError)
-              .then(res => res.json())
-              .then(data => {
-                Object.assign(user, data)
-                modal.value.show();
-              })
-            .catch(error => errorText.value = error.message)
-          })
+      return res;
+    }
+
+    const getPosts = () => {
+      
+      fetch('https://jsonplaceholder.typicode.com/posts')
+        .then(handleError)
+        .then(res => res.json())
+        .then(data => posts.push(...data))
         .catch(error => errorText.value = error.message)
-      }
+    }
 
-      const savePostForm = (postForm) => {
-        posts.push(postForm);
-      }
+    const showPostModal = ({ postData, userData }) => {
+      Object.assign(post, postData)
+      Object.assign(user, userData)
+      modal.value.show();
+    }
 
-      const fetchUpdatePost = id => {
-          fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
-            .then(handleError)
-            .then(res => res.json())
-            .then(data => {
-              postForm.id = data.id
-              postForm.title = data.title
-              postForm.body = data.body
-              postForm.userId = data.userId
-            })
-            .catch(error => errorText.value = error.message)
+    const savePostForm = (postForm) => {
+      posts.push(postForm)
+    }
+
+    const fetchUpdatePost = data => {
+      postForm.id = data.id
+      postForm.title = data.title
+      postForm.body = data.body
+      postForm.userId = data.userId
+    }
+
+    const updatePostForm = (updatedPost) => {
+      posts.map(post => {
+        if (post.id === updatedPost.id) {
+          post.title = updatedPost.title
+          post.body = updatedPost.body
         }
-
-        const updatePostForm = (updatedPost) => {
-          posts.map(post => {
-            if (post.id === updatedPost.id) {
-                post.title = updatedPost.title
-                post.body = updatedPost.body
-            }
-          })    
-        }
-
-        const deletePost = (id, index) => {
-          fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
-            method: 'delete'
-          })
-          .then(handleError)
-          .then(res => res.json())
-          .then(() => {
-            // const post = posts.find(post => post.id === id)
-            // const postIndex = posts.indexOf(post)
-            posts.splice(index, 1)
-          })
-        }
-
-      getPosts();
-
-      onMounted(() => {
-        modal.value = new Modal(exampleModal.value)
       })
-  
-      return {
-        posts,
-        post,
-        user,
-        errorText,
-        exampleModal,
-        showPostModal,
-        postForm,
-        savePostForm,
-        fetchUpdatePost,
-        isUpdating,
-        updatePostForm,
-        deletePost
-      };
-    },
-  
-    // data: () => ({
-    //   posts: [],
-    //   post: {},
-    //   user: {},
-    //   modal: null
-    // }),
-    // methods: {
-    //   getPosts() {
-    //     fetch('https://jsonplaceholder.typicode.com/posts')
-    //       .then(res => res.json())
-    //       .then(data => this.posts = data)
-    //     },
-    //     showPostModal(id) {
-    //       fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
-    //         .then(res => res.json())
-    //         .then(data => {
-    //           this.post = data
+    }
 
-    //           fetch(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
-    //             .then(res => res.json())
-    //             .then(data => {
-    //               this.user = data
-    //               this.modal.show()
-    //             })
-    //         })
-    //     }
-    // },
-    // mounted() {
-    //     this.modal = new Modal(this.$refs.exampleModal)
-    // }
-  };
-  </script>
-  
-  <style scoped>
-  </style>
+    const deletePost = index => {
+      posts.splice(index, 1)
+    }
+
+    getPosts()
+
+    onMounted(() => {
+      modal.value = new Modal(exampleModal.value.$el)
+    })
+
+    return {
+      posts,
+      post,
+      postForm,
+      savePostForm,
+      user,
+      exampleModal,
+      showPostModal,
+      errorText,
+      fetchUpdatePost,
+      updatePostForm,
+      deletePost
+    };
+  },
+};
+</script>

@@ -12,8 +12,7 @@
 </template>
 
 <script>
-import { handleError } from '../utils/helpers.js'
-import axios from 'axios'
+import axios from '../plugins/axios.js'
 export default {
   name: "PostCard",
   props: {
@@ -52,9 +51,9 @@ export default {
       //   emit('error', error.message)
       // }
       try {
-        const { data } = await axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
+        const { data } = await axios.get(`/posts/${id}`)
         const postData = data;
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${postData.userId}`)
+        const response = await axios.get(`/users/${postData.userId}`)
         emit('show-modal', { postData, userData: response.data })
       } catch (error) {
         emit('error', 'اررور داشتیم')
@@ -62,14 +61,14 @@ export default {
     }
     
     const UpdatePost = id => {
-      axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
+      axios.get(`/posts/${id}`)
         .then(({ data }) => {
           emit('show-update', data)
         })
         .catch(() => emit('error', 'اررور داشتیم'))
     }
     const deletePost = (id, index) => {
-      axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`)
+      axios.delete(`/posts/${id}`)
         .then(() => emit('post-deleted', index))
         .catch(() => emit('error', 'اررور داشتیم'))
     }

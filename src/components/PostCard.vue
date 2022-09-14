@@ -1,83 +1,78 @@
 <template>
-    <div class="card" style="width: 18rem;">
-      <div class="card-body">
-        <h5 class="card-title">پست شماره {{ post.id }}</h5>
-        <p class="card-text">{{ post.title }}</p>
-        <p class="card-text">{{ post.body }}</p>
-        <button class="me-2 btn btn-primary" @click="showModal(post.id)">بیشتر</button>
-        <button class="me-2 btn btn-primary" @click="UpdatePost(post.id)">ویرایش</button>
-        <button class="btn btn-danger" @click="deletePost(post.id, index)">X</button>
-      </div>
+  <div class="card" style="width: 18rem;">
+    <div class="card-body">
+      <h5 class="card-title">پست شماره {{ post.id }}</h5>
+      <p class="card-text">{{ post.title }}</p>
+      <p class="card-text">{{ post.body }}</p>
+      <button class="me-2 btn btn-primary" @click="showModal(post.id)">بیشتر</button>
+      <button class="me-2 btn btn-primary" @click="UpdatePost(post.id)">ویرایش</button>
+      <button class="btn btn-danger" @click="deletePost(post.id, index)">X</button>
     </div>
-  </template>
-  
-  <script>
-  import { handleError } from '../utils/helpers.js'
-  
-  export default {
-    name: "PostCard",
-  
-    props: {
-      post: {
-        type: Object,
-        required: true
-      },
-      index: {
-        type: Number,
-        required: true
-      },
+  </div>
+</template>
+
+<script>
+import { handleError } from '../utils/helpers.js'
+import axios from 'axios'
+export default {
+  name: "PostCard",
+  props: {
+    post: {
+      type: Object,
+      required: true
     },
-  
-    setup(props, { emit }) {
-      
-      const showModal = (id) => {
-        fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
-          .then(handleError)
-          .then(res => res.json())
-          .then(data => {
-            const postData = data
-            fetch(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
-              .then(handleError)
-              .then(res => res.json())
-              .then(data => {
-                const userData = data
-  
-                emit('show-modal', { postData, userData })
-              })
-              .catch(error => context.emit('error', error.message))
-          })
-          .catch(error => context.emit('error', error.message))
-      }
-      
-      const UpdatePost = id => {
-        fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
-          .then(handleError)
-          .then(res => res.json())
-          .then(data => {
-            emit('show-update', data)
-          })
-          .catch(error => context.emit('error', error.message))
-      }
-  
-      const deletePost = (id, index) => {
-        fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
-          method: 'delete'
+    index: {
+      type: Number,
+      required: true
+    },
+  },
+  setup(props, { emit }) {
+    
+    const showModal = async(id) => {
+      axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
+        .then(({ data }) => {
+          const postData = data
+          axios.get(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
+            .then(({ data }) => {
+              const userData = data
+              emit('show-modal', { postData, userData })
+            })
+            .catch(() => emit('error', 'اررور داشتیم'))
         })
-        .then(handleError)
-        .then(res => res.json())
+        .catch(() => emit('error', 'اررور داشتیم'))
+      // try {
+      //   const postRes = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
+      //   handleError(postRes)
+      //   const postData = await postRes.json()
+      //   const userRes = await fetch(`https://jsonplaceholder.typicode.com/users/${postData.userId}`)
+      //   handleError(userRes)
+      //   const userData = await userRes.json()
+      //   emit('show-modal', { postData, userData })
+      // } catch(error) {
+      //   emit('error', error.message)
+      // }
+    }
+    
+    const UpdatePost = id => {
+      axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
+        .then(({ data }) => {
+          emit('show-update', data)
+        })
+        .catch(() => emit('error', 'اررور داشتیم'))
+    }
+    const deletePost = (id, index) => {
+      axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`)
         .then(() => emit('post-deleted', index))
-        .catch(error => context.emit('error', error.message))
-      }
-  
-      return {
-        showModal,
-        UpdatePost,
-        deletePost,
-      }
+        .catch(() => emit('error', 'اررور داشتیم'))
+    }
+    return {
+      showModal,
+      UpdatePost,
+      deletePost,
     }
   }
-  </script>
-  
-  <style>
-  
-  </style>
+}
+</script>
+
+<style>
+</style>

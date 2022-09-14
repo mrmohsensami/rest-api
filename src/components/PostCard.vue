@@ -29,17 +29,17 @@ export default {
   setup(props, { emit }) {
     
     const showModal = async(id) => {
-      axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
-        .then(({ data }) => {
-          const postData = data
-          axios.get(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
-            .then(({ data }) => {
-              const userData = data
-              emit('show-modal', { postData, userData })
-            })
-            .catch(() => emit('error', 'اررور داشتیم'))
-        })
-        .catch(() => emit('error', 'اررور داشتیم'))
+      // axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
+      //   .then(({ data }) => {
+      //     const postData = data
+      //     axios.get(`https://jsonplaceholder.typicode.com/users/${data.userId}`)
+      //       .then(({ data }) => {
+      //         const userData = data
+      //         emit('show-modal', { postData, userData })
+      //       })
+      //       .catch(() => emit('error', 'اررور داشتیم'))
+      //   })
+      //   .catch(() => emit('error', 'اررور داشتیم'))
       // try {
       //   const postRes = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
       //   handleError(postRes)
@@ -51,6 +51,14 @@ export default {
       // } catch(error) {
       //   emit('error', error.message)
       // }
+      try {
+        const { data } = await axios.get(`https://jsonplaceholder.typicode.com/posts/${id}`)
+        const postData = data;
+        const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${postData.userId}`)
+        emit('show-modal', { postData, userData: response.data })
+      } catch (error) {
+        emit('error', 'اررور داشتیم')
+      }
     }
     
     const UpdatePost = id => {

@@ -65,7 +65,21 @@ export default {
       //   errorText.value = error.message
       // }
       try {
-        const { data } = await axios.get('https://jsonplaceholder.typicode.com/posts')
+        const token = 'randomtoken'
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-type': 'application/json'
+          },
+          timeout: 3000,
+          params: {
+            _limit: 10
+          }
+        };
+        const { data } = await axios.get(
+          'https://jsonplaceholder.typicode.com/posts',
+          config
+        )
         posts.push(...data)
       } catch(error) {
         errorText.value = 'اررور داشتیم'

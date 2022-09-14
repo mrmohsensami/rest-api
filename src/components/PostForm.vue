@@ -28,9 +28,22 @@ export default {
     const postForm = reactive({ title: '', body: '', userId: 2 })
     const isUpdating = ref(false);
     const savePost = async() => {
-      axios.post('https://jsonplaceholder.typicode.com/posts', postForm)
-        .then(({ data }) => {
-          context.emit('post-saved', { id: data.id, ...postForm })
+      
+      const config = {
+        headers: {
+          Authorization: `Bearer jkdgjklnfkln`,
+          'Content-type': 'application/json'
+        },
+        timeout: 3000
+      };
+      axios.post(
+        'https://jsonplaceholder.typicode.com/posts',
+        postForm,
+        config
+      )
+        .then((response) => {
+          console.log(response)
+          context.emit('post-saved', { id: response.data.id, ...postForm })
           postForm.title = ''
           postForm.body = ''
         })
